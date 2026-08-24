@@ -1,7 +1,7 @@
 package org.example.Repository;
 
 import org.example.HibernateUtil;
-import org.example.model.Category;
+import org.example.entity.Category;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;

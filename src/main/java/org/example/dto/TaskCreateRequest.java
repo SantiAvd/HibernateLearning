@@ -1,6 +1,6 @@
 package org.example.dto;
 
-import org.example.model.Category;
+import org.example.entity.Category;
 import org.example.model.PriorityValues;
 
 import java.time.Instant;

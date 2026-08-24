@@ -1,7 +1,7 @@
 package org.example.service;
 
 import org.example.Repository.CategoryRepository;
-import org.example.model.Category;
+import org.example.entity.Category;
 import org.example.model.CategoryCollors;
 
 import java.util.List;

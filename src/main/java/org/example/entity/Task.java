@@ -1,6 +1,8 @@
-package org.example.model;
+package org.example.entity;
 
 import  jakarta.persistence.*;
+import org.example.model.PriorityValues;
+import org.example.model.TaskStatus;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -98,7 +100,7 @@ public class Task {
 
     private String formatPriority() {
         if (priority == null) {
-            return "не указан";
+            return "Не указан";
         }
         return switch (priority) {
             case LOW -> "🟢 LOW";
