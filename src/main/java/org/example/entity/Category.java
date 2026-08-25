@@ -1,6 +1,8 @@
-package org.example.model;
+package org.example.entity;
 
 import jakarta.persistence.*;
+import org.example.model.CategoryCollors;
+import org.example.model.CollorMapper;
 
 import java.util.List;
 

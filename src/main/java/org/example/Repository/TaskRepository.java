@@ -1,12 +1,14 @@
 package org.example.Repository;
 
 import org.example.HibernateUtil;
+import org.example.entity.Category;
+import org.example.entity.Task;
+import org.example.entity.User;
 import org.example.model.*;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -110,7 +112,7 @@ public class TaskRepository {
         }
     }
 
-    public List<Task> findByUserAndCategory(User user,Category category) {
+    public List<Task> findByUserAndCategory(User user, Category category) {
         try(Session session = HibernateUtil.getSessionFactory().openSession()) {
             Query<Task> query = session.createQuery("FROM Task t where t.category =:category and t.user =:user", Task.class);
             query.setParameter("category", category);

@@ -1,6 +1,6 @@
 package org.example.service;
 
-import org.example.model.User;
+import org.example.entity.User;
 
 public record UserRegistrationResult(
         User user,

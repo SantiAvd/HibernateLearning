@@ -1,10 +1,9 @@
 package org.example.service;
 
 import org.example.Repository.UserRepository;
-import org.example.model.User;
+import org.example.entity.User;
 
 import java.util.Optional;
-import java.util.SortedMap;
 
 public class UserService {
 

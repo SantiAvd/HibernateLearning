@@ -1,6 +1,7 @@
-package org.example.model;
+package org.example.entity;
 
 import jakarta.persistence.*;
+import org.example.model.UserState;
 
 import java.time.Instant;
 import java.util.List;

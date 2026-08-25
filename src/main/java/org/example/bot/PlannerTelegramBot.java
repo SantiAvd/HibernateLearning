@@ -2,6 +2,9 @@ package org.example.bot;
 
 import org.example.config.BotConfig;
 import org.example.dto.TaskCreateRequest;
+import org.example.entity.Category;
+import org.example.entity.Task;
+import org.example.entity.User;
 import org.example.model.*;
 import org.example.service.CategoryService;
 import org.example.service.TaskService;
