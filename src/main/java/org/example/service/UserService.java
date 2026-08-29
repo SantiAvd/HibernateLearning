@@ -2,7 +2,9 @@ package org.example.service;
 
 import org.example.Repository.UserRepository;
 import org.example.entity.User;
+import org.example.service.dto.UserRegistrationResult;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class UserService {
@@ -21,7 +23,23 @@ public class UserService {
 
         Optional<User> optionalUser = userRepository.findByTelegramId(telegramId);
          if (optionalUser.isPresent()) {
-             return new UserRegistrationResult(optionalUser.get(), false);
+             User existingUser = optionalUser.get();
+
+             boolean changed = false;
+             if (!Objects.equals(existingUser.getUserName(), username)) {
+                 existingUser.setUserName(username);
+                 changed = true;
+             }
+             if (!Objects.equals(existingUser.getFirstName(), firstName)) {
+                 existingUser.setFirstName(firstName);
+                 changed = true;
+             }
+
+             if (changed) {
+                 userRepository.update(existingUser);
+             }
+
+             return new UserRegistrationResult(existingUser, false);
          }
         User user = new User(
                 telegramId,

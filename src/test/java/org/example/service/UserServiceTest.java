@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.Repository.UserRepository;
 import org.example.entity.User;
+import org.example.service.dto.UserRegistrationResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

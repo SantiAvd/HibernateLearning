@@ -2,7 +2,7 @@ package org.example.entity;
 
 import jakarta.persistence.*;
 import org.example.model.CategoryCollors;
-import org.example.model.CollorMapper;
+import org.example.mapper.CollorMapper;
 
 import java.util.List;
 

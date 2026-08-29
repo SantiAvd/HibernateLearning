@@ -1,14 +1,18 @@
 package org.example.bot;
 
+import org.example.exceptions.CategoryNotFoundException;
+import org.example.exceptions.TaskNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.example.config.BotConfig;
-import org.example.dto.TaskCreateRequest;
+import org.example.service.dto.TaskCreateRequest;
 import org.example.entity.Category;
 import org.example.entity.Task;
 import org.example.entity.User;
 import org.example.model.*;
 import org.example.service.CategoryService;
 import org.example.service.TaskService;
-import org.example.service.UserRegistrationResult;
+import org.example.service.dto.UserRegistrationResult;
 import org.example.service.UserService;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
@@ -24,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +38,7 @@ public class PlannerTelegramBot
 
     private final TelegramClient telegramClient;
     private final BotConfig botConfig;
+    private static final Logger logger = LoggerFactory.getLogger(PlannerTelegramBot.class);
 
     private final UserService userService;
     private final TaskService taskService;
@@ -295,8 +301,7 @@ public class PlannerTelegramBot
 
         } catch (DateTimeParseException e) {
 
-            sendMessage(chatId, "❌ Неверный формат даты.\n\n" + "Используйте:\n" + "31.08.2026 18:30"
-            );
+            sendMessage(chatId, "❌ Неверный формат даты.\n\n" + "Используйте:\n" + "31.08.2026 18:30");
         }
     }
 
@@ -307,7 +312,13 @@ public class PlannerTelegramBot
      */
 
     private void handlePriority(User user, Long chatId, Long telegramId, String text) {
-        try {
+        boolean isValidPriority = Arrays.stream(PriorityValues.values())
+                .anyMatch(p -> p.name().equalsIgnoreCase(text));
+
+        if (!isValidPriority) {
+            sendMessage(chatId, "❌ Неверный приоритет. Выберите один из вариантов на клавиатуре.");
+            return;
+        }
             PriorityValues priority = PriorityValues.valueOf(text.toUpperCase());
 
             TaskCreateRequest request = taskRequests.get(telegramId);
@@ -325,10 +336,6 @@ public class PlannerTelegramBot
             userService.update(user);
 
             sendMessage(chatId, "Привязать категорию к задаче?", createCategoryChoiceMenu());
-
-        } catch (IllegalArgumentException e) {
-            sendMessage(chatId," ❌ Неверный приоритет Выберите один из вариантов на клавиатуре.");
-        }
     }
 
 
@@ -350,8 +357,15 @@ public class PlannerTelegramBot
     }
 
     private void handleNewCategoryColor(User user, Long chatId, Long telegramId, String text) {
-        try {
-            CategoryCollors color = CategoryCollors.valueOf(text.toUpperCase());
+
+        boolean isValidCategoryCollor = Arrays.stream(CategoryCollors.values())
+                .anyMatch(p -> p.name().equalsIgnoreCase(text));
+
+        if (!isValidCategoryCollor) {
+            sendMessage(chatId, "❌ Неверный цве. Выберите один из вариантов на клавиатуре.");
+            return;
+        }
+        CategoryCollors color = CategoryCollors.valueOf(text.toUpperCase());
 
             String name = pendingCategoryNames.get(telegramId);
 
@@ -382,11 +396,8 @@ public class PlannerTelegramBot
             user.setState(UserState.IDLE);
             userService.update(user);
 
-            sendMessage(chatId, "✅ Категория «" + category.getName() + "» создана, задача успешно добавлена!");
+            sendMessage(chatId, "✅ Категория « " + category.getName() + " » создана, задача успешно добавлена!");
 
-        } catch (IllegalArgumentException e) {
-            sendMessage(chatId, "❌ Такого цвета нет. Выберите один из предложенных вариантов.");
-        }
     }
 
     private void handleCategory(User user, Long chatId, Long telegramId, String text) {
@@ -394,11 +405,6 @@ public class PlannerTelegramBot
             Long categoryId = Long.parseLong(text);
 
             var category = categoryService.getById(categoryId);
-
-            if (category == null) {
-                sendMessage(chatId, "❌ Категория с таким ID не найдена.");
-                return;
-            }
 
             TaskCreateRequest request = taskRequests.get(telegramId);
 
@@ -419,8 +425,10 @@ public class PlannerTelegramBot
             sendMessage(chatId, "✅ Задача успешно создана!");
 
         } catch (NumberFormatException e) {
-
             sendMessage(chatId, "❌ Введите числовой ID категории.");
+        } catch (CategoryNotFoundException e) {
+            logger.warn("Попытка найти не сущестующую категорию: {}", text);
+            sendMessage(chatId, "❌ Такой категории нет.");
         }
     }
 
@@ -513,8 +521,10 @@ public class PlannerTelegramBot
             sendMessage(chatId, "✅ Задача удалена.", createTaskMenu());
 
         } catch (NumberFormatException e) {
+            logger.warn("Пользователь ввёл нечисловой ID задачи: {}", text);
             sendMessage(chatId, "❌ Введите числовой ID задачи.");
-        } catch (RuntimeException e) {
+        } catch (TaskNotFoundException e) {
+            logger.warn("Попытка удалить несуществующую задачу с ID: {}", text);
             sendMessage(chatId, "❌ Задача с таким ID не найдена.");
         }
     }
@@ -654,7 +664,8 @@ public class PlannerTelegramBot
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
-            throw new RuntimeException("Ошибка отправки сообщения", e);
+            logger.error("Ошибка сервера в чате с пользователем  {}", chatId, e);
+            throw new RuntimeException("Ошибка отправки сообщения");
         }
     }
 

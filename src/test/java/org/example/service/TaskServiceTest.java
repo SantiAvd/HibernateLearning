@@ -2,7 +2,8 @@ package org.example.service;
 
 
 import org.example.Repository.TaskRepository;
-import org.example.dto.TaskCreateRequest;
+import org.example.exceptions.TaskNotFoundException;
+import org.example.service.dto.TaskCreateRequest;
 import org.example.entity.Category;
 import org.example.entity.Task;
 import org.example.entity.User;
@@ -94,27 +95,22 @@ public class TaskServiceTest {
         task.setStatus(TaskStatus.NOT_STARTED);
         when(taskRepository.findById(1L)).thenReturn(Optional.empty());
 
-        taskService.changeStatus(1L, TaskStatus.NOT_STARTED);
+        RuntimeException exception = Assertions.assertThrowsExactly(RuntimeException.class,
+                () -> taskService.changeStatus(1L, TaskStatus.NOT_STARTED));
 
         verify(taskRepository,never()).update(any(Task.class));
     }
 
     @Test
-    void deleteTaskIfExistTest() {
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-
-        taskService.delete(1L);
-
-        verify(taskRepository, times(1)).delete(task);
-    }
-
-    @Test
     void deleteTaskIfNotExistTest() {
-        when(taskRepository.findById(1L)).thenReturn(Optional.empty());
+        Long id = 1L;
+        when(taskRepository.findById(id)).thenReturn(Optional.empty());
 
-        taskService.delete(1L);
+        TaskNotFoundException taskNotFoundException = Assertions.assertThrowsExactly(TaskNotFoundException.class,
+                () -> taskService.delete(id));
 
-        verify(taskRepository, never()).delete(any(Task.class));
+        Assertions.assertEquals("Задача с ID "  + id +  " не найдена", taskNotFoundException.getMessage());
+        verify(taskRepository, never()).delete(id);
     }
 
     @Test

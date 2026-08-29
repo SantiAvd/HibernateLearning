@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.Repository.CategoryRepository;
 import org.example.entity.Category;
+import org.example.exceptions.CategoryNotFoundException;
 import org.example.model.CategoryCollors;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,9 +42,13 @@ public class CategoryServiceTest {
 
     @Test
     void getByIdNotFoundTest() {
+        Long id = 1L;
+        when(categoryRepository.findById(id)).thenReturn(Optional.empty());
 
-        when(categoryRepository.findById(9992L)).thenReturn(Optional.empty());
-        Assertions.assertThrows(RuntimeException.class, ()-> categoryService.getById(9992L));
+        CategoryNotFoundException exception = Assertions.assertThrowsExactly(CategoryNotFoundException.class,
+                () -> categoryService.getById(id));
+
+        Assertions.assertEquals("Категория " + id + " не найдена", exception.getMessage());
     }
 
     @ParameterizedTest

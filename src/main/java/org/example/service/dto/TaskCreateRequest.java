@@ -1,4 +1,4 @@
-package org.example.dto;
+package org.example.service.dto;
 
 import org.example.entity.Category;
 import org.example.model.PriorityValues;

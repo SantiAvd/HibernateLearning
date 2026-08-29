@@ -1,7 +1,8 @@
 package org.example.service;
 
 import org.example.Repository.TaskRepository;
-import org.example.dto.TaskCreateRequest;
+import org.example.exceptions.TaskNotFoundException;
+import org.example.service.dto.TaskCreateRequest;
 import org.example.entity.Category;
 import org.example.entity.Task;
 import org.example.entity.User;
@@ -44,18 +45,17 @@ public class TaskService {
     }
 
     public void changeStatus(Long id, TaskStatus status) {
-       Optional<Task> optionalTask = taskRepository.findById(id);
-       if (optionalTask.isPresent()) {
-           Task task = optionalTask.get();
-           task.setStatus(status);
-           taskRepository.update(task);
-       }
+       Task optionalTask = taskRepository.findById(id).orElseThrow(() ->
+                       new RuntimeException("Задача не найдена"));
+
+       Task task = optionalTask;
+       task.setStatus(status);
+       taskRepository.update(task);
     }
 
     public void delete(Long id) {
-        Optional<Task> task = taskRepository.findById(id);
-        if (task.isPresent()) {
-            taskRepository.delete(task.get());
-        }
+        Task optionalTask = taskRepository.findById(id).orElseThrow(() ->
+                new TaskNotFoundException(id));
+        taskRepository.delete(optionalTask.getId());
     }
 }
