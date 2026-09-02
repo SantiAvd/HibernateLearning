@@ -32,6 +32,13 @@ import static org.mockito.Mockito.*;
 public class TaskServiceTest {
     @Mock
     TaskRepository taskRepository;
+
+    @Mock
+    CategoryService categoryService;
+
+    @Mock
+    UserService userService;
+
     @InjectMocks
     TaskService taskService;
     User user;
@@ -46,14 +53,19 @@ public class TaskServiceTest {
     @Test
     void createTaskTest() {
         Category category = new Category("Home", CategoryCollors.ORANGE);
+
         TaskCreateRequest taskCreateRequest = new TaskCreateRequest();
         taskCreateRequest.setTitle("title");
         taskCreateRequest.setDescription("description");
-        taskCreateRequest.setCategory(category);
         taskCreateRequest.setPriority(PriorityValues.LOW);
         taskCreateRequest.setDeadline(Instant.parse("2026-08-23T10:15:30Z"));
+        taskCreateRequest.setTelegramId(1L);
+        taskCreateRequest.setCategory(5L);
 
-        taskService.create(taskCreateRequest, user);
+        when(userService.getUserByTelegramId(1L)).thenReturn(user);
+        when(categoryService.getById(5L)).thenReturn(category);
+
+        taskService.create(taskCreateRequest);
 
         verify(taskRepository, times(1)).save(any(Task.class));
     }
@@ -89,16 +101,34 @@ public class TaskServiceTest {
 
         verify(taskRepository,times(1)).update(task);
     }
+    @Test
+    void createTaskTest_withoutCategory() {
+        TaskCreateRequest taskCreateRequest = new TaskCreateRequest();
+        taskCreateRequest.setTitle("title");
+        taskCreateRequest.setDescription("description");
+        taskCreateRequest.setPriority(PriorityValues.LOW);
+        taskCreateRequest.setDeadline(Instant.parse("2026-08-23T10:15:30Z"));
+        taskCreateRequest.setTelegramId(1L);
+        taskCreateRequest.setCategory(null);
+
+        when(userService.getUserByTelegramId(1L)).thenReturn(user);
+
+        taskService.create(taskCreateRequest);
+
+        verify(categoryService, never()).getById(any());
+        verify(taskRepository, times(1)).save(any(Task.class));
+    }
 
     @Test
     void changeStatusTaskIfNotExistTest() {
         task.setStatus(TaskStatus.NOT_STARTED);
         when(taskRepository.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = Assertions.assertThrowsExactly(RuntimeException.class,
+        TaskNotFoundException exception = Assertions.assertThrowsExactly(TaskNotFoundException.class,
                 () -> taskService.changeStatus(1L, TaskStatus.NOT_STARTED));
 
-        verify(taskRepository,never()).update(any(Task.class));
+        Assertions.assertEquals("Задача с ID 1 не найдена", exception.getMessage());
+        verify(taskRepository, never()).update(any(Task.class));
     }
 
     @Test

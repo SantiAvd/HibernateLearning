@@ -90,43 +90,43 @@ public class PlannerTelegramBot
 
             case IDLE -> handleIdle(chatId, telegramId, user, text);
 
-            case WAITING_FOR_TITLE -> handleTitle(user, chatId, telegramId, text);
+            case WAITING_FOR_TITLE -> handleTitle(chatId, telegramId, text);
 
-            case WAITING_FOR_DESCRIPTION -> handleDescription(user, chatId, telegramId, text);
+            case WAITING_FOR_DESCRIPTION -> handleDescription(chatId, telegramId, text);
 
-            case WAITING_FOR_DEADLINE -> handleDeadline(user, chatId, telegramId, text);
+            case WAITING_FOR_DEADLINE -> handleDeadline(chatId, telegramId, text);
 
-            case WAITING_FOR_PRIORITY -> handlePriority(user, chatId, telegramId, text);
+            case WAITING_FOR_PRIORITY -> handlePriority(chatId, telegramId, text);
 
-            case WAITING_FOR_CATEGORY -> handleCategory(user, chatId, telegramId, text);
+            case WAITING_FOR_CATEGORY -> handleCategory(chatId, telegramId, text);
 
-            case WAITING_FOR_NEW_CATEGORY_NAME -> handleNewCategoryName(user, chatId, telegramId, text);
+            case WAITING_FOR_NEW_CATEGORY_NAME -> handleNewCategoryName(chatId, telegramId, text);
 
-            case WAITING_FOR_NEW_CATEGORY_COLOR -> handleNewCategoryColor(user, chatId, telegramId, text);
+            case WAITING_FOR_NEW_CATEGORY_COLOR -> handleNewCategoryColor(chatId, telegramId, text);
 
-            case WAITING_FOR_DELETE_TASK_ID -> handleDeleteTaskId(user, chatId, text);
+            case WAITING_FOR_DELETE_TASK_ID -> handleDeleteTaskId(telegramId, chatId, text);
 
-            case WAITING_FOR_STATUS_TASK_ID -> handleStatusTaskId(user, chatId, telegramId, text);
+            case WAITING_FOR_STATUS_TASK_ID -> handleStatusTaskId(chatId, telegramId, text);
 
-            case WAITING_FOR_NEW_STATUS -> handleNewStatus(user, chatId, telegramId, text);
+            case WAITING_FOR_NEW_STATUS -> handleNewStatus(chatId, telegramId, text);
 
-            case WAITING_FOR_STANDALONE_CATEGORY_NAME -> handleStandaloneCategoryName(user, chatId, telegramId, text);
+            case WAITING_FOR_STANDALONE_CATEGORY_NAME -> handleStandaloneCategoryName(chatId, telegramId, text);
 
-            case WAITING_FOR_STANDALONE_CATEGORY_COLOR -> handleStandaloneCategoryColor(user, chatId, telegramId, text);
+            case WAITING_FOR_STANDALONE_CATEGORY_COLOR -> handleStandaloneCategoryColor(chatId, telegramId, text);
 
-            case WAITING_FOR_DELETE_CATEGORY_ID -> handleDeleteCategoryId(user, chatId, text);
+            case WAITING_FOR_DELETE_CATEGORY_ID -> handleDeleteCategoryId(telegramId, chatId, text);
 
-            case WAITING_FOR_CATEGORY_CHOICE -> handleCategoryChoice(user, chatId, telegramId, text);
+            case WAITING_FOR_CATEGORY_CHOICE -> handleCategoryChoice(chatId, telegramId, text);
 
-            case WAITING_FOR_ASSIGN_TASK_ID -> handleAssignTaskId(user, chatId, telegramId, text);
+            case WAITING_FOR_ASSIGN_TASK_ID -> handleAssignTaskId(chatId, telegramId, text);
 
-            case WAITING_FOR_ASSIGN_CATEGORY_CHOICE -> handleAssignCategoryChoice(user, chatId, telegramId, text);
+            case WAITING_FOR_ASSIGN_CATEGORY_CHOICE -> handleAssignCategoryChoice(chatId, telegramId, text);
 
-            case WAITING_FOR_ASSIGN_CATEGORY_ID -> handleAssignCategoryId(user, chatId, telegramId, text);
+            case WAITING_FOR_ASSIGN_CATEGORY_ID -> handleAssignCategoryId(chatId, telegramId, text);
 
-            case WAITING_FOR_ASSIGN_NEW_CATEGORY_NAME -> handleAssignNewCategoryName(user, chatId, telegramId, text);
+            case WAITING_FOR_ASSIGN_NEW_CATEGORY_NAME -> handleAssignNewCategoryName(chatId, telegramId, text);
 
-            case WAITING_FOR_ASSIGN_NEW_CATEGORY_COLOR -> handleAssignNewCategoryColor(user, chatId, telegramId, text);
+            case WAITING_FOR_ASSIGN_NEW_CATEGORY_COLOR -> handleAssignNewCategoryColor(chatId, telegramId, text);
         }
     }
 
@@ -136,7 +136,7 @@ public class PlannerTelegramBot
 
         User user = result.user();
         user.setState(UserState.IDLE);
-        userService.update(user);
+        userService.updateState(telegramId,UserState.IDLE);
 
         if (result.isNew()) {
             sendMessage(chatId, "Добро пожаловать, " + user.getFirstName() + "!");
@@ -154,31 +154,26 @@ public class PlannerTelegramBot
             case "📂 Категории" -> handleCategories(chatId);
             case "🔙 Главное меню" -> sendMessage(chatId, "Главное меню:", createMainMenu());
             case "🗑 Удалить задачу" -> {
-                user.setState(UserState.WAITING_FOR_DELETE_TASK_ID);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.WAITING_FOR_DELETE_TASK_ID);
                 sendMessage(chatId, "Введите ID задачи для удаления:");
             }
             case "🔄 Поменять статус задачи" -> {
-                user.setState(UserState.WAITING_FOR_STATUS_TASK_ID);
-                userService.update(user);
+                userService.updateState(telegramId,UserState.WAITING_FOR_STATUS_TASK_ID);
                 sendMessage(chatId, "Введите ID задачи для смены статуса:");
             }
 
             case "➕ Создать категорию" -> {
-                user.setState(UserState.WAITING_FOR_STANDALONE_CATEGORY_NAME);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.WAITING_FOR_STANDALONE_CATEGORY_NAME);
                 sendMessage(chatId, "Введите название новой категории:");
             }
 
             case "📂 Удалить категорию" -> {
-                user.setState(UserState.WAITING_FOR_DELETE_CATEGORY_ID);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.WAITING_FOR_DELETE_CATEGORY_ID);
                 sendMessage(chatId, "Введите ID категории для удаления");
             }
 
             case "🏷 Назначить категорию" -> {
-                user.setState(UserState.WAITING_FOR_ASSIGN_TASK_ID);
-                userService.update(user);
+                userService.updateState(telegramId,UserState.WAITING_FOR_ASSIGN_TASK_ID );
                 sendMessage(chatId, "Введите ID задачи, которой хотите назначить категорию:");
             }
 
@@ -192,8 +187,7 @@ public class PlannerTelegramBot
 
         taskRequests.put(telegramId, request);
         User user = userService.getUserByTelegramId(telegramId);
-        user.setState(UserState.WAITING_FOR_TITLE);
-        userService.update(user);
+        userService.updateState(telegramId,UserState.WAITING_FOR_TITLE);
 
         sendMessage(chatId, "Введите название задачи:");
     }
@@ -220,22 +214,20 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleTitle(User user, Long chatId, Long telegramId, String text) {
+    private void handleTitle(Long chatId, Long telegramId, String text) {
 
         TaskCreateRequest request = taskRequests.get(telegramId);
 
         if (request == null) {
             sendMessage(chatId, "Начните создание задачи заново.");
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId,UserState.IDLE);
             return;
         }
 
         request.setTitle(text);
 
-        user.setState(UserState.WAITING_FOR_DESCRIPTION);
-        userService.update(user);
+        userService.updateState(telegramId, UserState.WAITING_FOR_DESCRIPTION);
 
         sendMessage(chatId, "Введите описание задачи:");
     }
@@ -246,23 +238,21 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleDescription(User user, Long chatId, Long telegramId, String text) {
+    private void handleDescription(Long chatId, Long telegramId, String text) {
 
         TaskCreateRequest request = taskRequests.get(telegramId);
 
         if (request == null) {
             sendMessage(chatId, "Начните создание задачи заново.");
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             return;
         }
 
         request.setDescription(text);
 
-        user.setState(UserState.WAITING_FOR_DEADLINE);
-        userService.update(user);
+        userService.updateState(telegramId, UserState.WAITING_FOR_DEADLINE);
 
         sendMessage(chatId, "Введите срок задачи.\n\n" + "Формат:\n" + "31.08.2026 18:30");
     }
@@ -273,7 +263,7 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleDeadline(User user, Long chatId, Long telegramId, String text) {
+    private void handleDeadline(Long chatId, Long telegramId, String text) {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
@@ -287,16 +277,13 @@ public class PlannerTelegramBot
             if (request == null) {
 
                 sendMessage(chatId, "Начните создание задачи заново.");
-
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
             request.setDeadline(deadline);
 
-            user.setState(UserState.WAITING_FOR_PRIORITY);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.WAITING_FOR_PRIORITY);
             sendMessage(chatId, "Выберите приоритет:", createPriorityMenu());
 
         } catch (DateTimeParseException e) {
@@ -311,7 +298,7 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handlePriority(User user, Long chatId, Long telegramId, String text) {
+    private void handlePriority(Long chatId, Long telegramId, String text) {
         boolean isValidPriority = Arrays.stream(PriorityValues.values())
                 .anyMatch(p -> p.name().equalsIgnoreCase(text));
 
@@ -325,15 +312,12 @@ public class PlannerTelegramBot
 
             if (request == null) {
                 sendMessage(chatId, "Начните создание задачи заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
             request.setPriority(priority);
-
-            user.setState(UserState.WAITING_FOR_CATEGORY_CHOICE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.WAITING_FOR_CATEGORY_CHOICE);
 
             sendMessage(chatId, "Привязать категорию к задаче?", createCategoryChoiceMenu());
     }
@@ -346,17 +330,16 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleNewCategoryName(User user, Long chatId, Long telegramId, String text) {
+    private void handleNewCategoryName(Long chatId, Long telegramId, String text) {
 
         pendingCategoryNames.put(telegramId, text);
 
-        user.setState(UserState.WAITING_FOR_NEW_CATEGORY_COLOR);
-        userService.update(user);
+        userService.updateState(telegramId, UserState.WAITING_FOR_NEW_CATEGORY_COLOR);
 
         sendMessage(chatId, "Выберите цвет категории:", createColorMenu());
     }
 
-    private void handleNewCategoryColor(User user, Long chatId, Long telegramId, String text) {
+    private void handleNewCategoryColor(Long chatId, Long telegramId, String text) {
 
         boolean isValidCategoryCollor = Arrays.stream(CategoryCollors.values())
                 .anyMatch(p -> p.name().equalsIgnoreCase(text));
@@ -371,8 +354,7 @@ public class PlannerTelegramBot
 
             if (name == null) {
                 sendMessage(chatId, "Начните создание категории заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
@@ -383,24 +365,22 @@ public class PlannerTelegramBot
 
             if (request == null) {
                 sendMessage(chatId, "Начните создание задачи заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
-            request.setCategory(category);
-
-            taskService.create(request, user);
+            request.setCategory(category.getId());
+            taskRequests.put(telegramId, request);
+            taskService.create(request);
             taskRequests.remove(telegramId);
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             sendMessage(chatId, "✅ Категория « " + category.getName() + " » создана, задача успешно добавлена!");
 
     }
 
-    private void handleCategory(User user, Long chatId, Long telegramId, String text) {
+    private void handleCategory(Long chatId, Long telegramId, String text) {
         try {
             Long categoryId = Long.parseLong(text);
 
@@ -412,16 +392,15 @@ public class PlannerTelegramBot
 
                 sendMessage(chatId, "Начните создание задачи заново.");
 
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
-            request.setCategory(category);
-            taskService.create(request, user);
+            request.setCategory(category.getId());
+            taskRequests.put(telegramId, request);
+            taskService.create(request);
             taskRequests.remove(telegramId);
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
             sendMessage(chatId, "✅ Задача успешно создана!");
 
         } catch (NumberFormatException e) {
@@ -432,14 +411,13 @@ public class PlannerTelegramBot
         }
     }
 
-    private void handleCategoryChoice(User user, Long chatId, Long telegramId, String text) {
+    private void handleCategoryChoice(Long chatId, Long telegramId, String text) {
 
         TaskCreateRequest request = taskRequests.get(telegramId);
 
         if (request == null) {
             sendMessage(chatId, "Начните создание задачи заново.");
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
             return;
         }
 
@@ -461,23 +439,22 @@ public class PlannerTelegramBot
                 }
                 sendMessage(chatId, message.toString());
 
-                user.setState(UserState.WAITING_FOR_CATEGORY);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.WAITING_FOR_CATEGORY);
             }
 
             case "➕ Создать новую" -> {
                 sendMessage(chatId, "Введите название новой категории:");
-                user.setState(UserState.WAITING_FOR_NEW_CATEGORY_NAME);
-                userService.update(user);
+
+                userService.updateState(telegramId,UserState.WAITING_FOR_NEW_CATEGORY_NAME);
             }
 
             case "🚫 Без категории" -> {
                 request.setCategory(null);
-                taskService.create(request, user);
+                taskRequests.put(telegramId, request);
+                taskService.create(request);
                 taskRequests.remove(telegramId);
 
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
 
                 sendMessage(chatId, "✅ Задача успешно создана без категории!", createMainMenu());
             }
@@ -509,14 +486,13 @@ public class PlannerTelegramBot
         sendMessage(chatId, message.toString(), createCategoryMenu());
     }
 
-    private void handleDeleteTaskId(User user, Long chatId, String text) {
+    private void handleDeleteTaskId(Long telegramId, Long chatId, String text) {
         try {
             Long taskId = Long.parseLong(text);
 
             taskService.delete(taskId);
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             sendMessage(chatId, "✅ Задача удалена.", createTaskMenu());
 
@@ -535,17 +511,16 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleStandaloneCategoryName(User user, Long chatId, Long telegramId, String text) {
+    private void handleStandaloneCategoryName(Long chatId, Long telegramId, String text) {
 
         pendingCategoryNames.put(telegramId, text);
 
-        user.setState(UserState.WAITING_FOR_STANDALONE_CATEGORY_COLOR);
-        userService.update(user);
+        userService.updateState(telegramId, UserState.WAITING_FOR_STANDALONE_CATEGORY_COLOR);
 
         sendMessage(chatId, "Выберите цвет категории:", createColorMenu());
     }
 
-    private void handleStandaloneCategoryColor(User user, Long chatId, Long telegramId, String text) {
+    private void handleStandaloneCategoryColor(Long chatId, Long telegramId, String text) {
         try {
             CategoryCollors color = CategoryCollors.valueOf(text.toUpperCase());
 
@@ -553,16 +528,14 @@ public class PlannerTelegramBot
 
             if (name == null) {
                 sendMessage(chatId, "Начните создание категории заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
             Category category = categoryService.create(name, color);
             pendingCategoryNames.remove(telegramId);
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId,UserState.IDLE);
 
             sendMessage(chatId, "✅ Категория «" + category.getName() + "» создана!", createCategoryMenu());
 
@@ -577,14 +550,13 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleDeleteCategoryId(User user, Long chatId, String text) {
+    private void handleDeleteCategoryId(Long telegramId, Long chatId, String text) {
         try {
             Long categoryId = Long.parseLong(text);
 
             categoryService.delete(categoryId);
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             sendMessage(chatId, "✅ Категория удалена.", createCategoryMenu());
 
@@ -598,14 +570,13 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleStatusTaskId(User user, Long chatId, Long telegramId, String text) {
+    private void handleStatusTaskId(Long chatId, Long telegramId, String text) {
         try {
             Long taskId = Long.parseLong(text);
 
             pendingStatusTaskIds.put(telegramId, taskId);   // сохраняем ID до выбора статуса
 
-            user.setState(UserState.WAITING_FOR_NEW_STATUS);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.WAITING_FOR_NEW_STATUS);
 
             sendMessage(chatId, "Выберите новый статус:", createStatusMenu());
 
@@ -614,7 +585,7 @@ public class PlannerTelegramBot
         }
     }
 
-    private void handleNewStatus(User user, Long chatId, Long telegramId, String text) {
+    private void handleNewStatus(Long chatId, Long telegramId, String text) {
         try {
             TaskStatus status = TaskStatus.valueOf(text.toUpperCase());
 
@@ -622,16 +593,14 @@ public class PlannerTelegramBot
 
             if (taskId == null) {
                 sendMessage(chatId, "Начните смену статуса заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
             taskService.changeStatus(taskId, status);   // ⬅️ подставь своё реальное название метода, если отличается
             pendingStatusTaskIds.remove(telegramId);
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             sendMessage(chatId, "✅ Статус обновлён.", createTaskMenu());
 
@@ -675,14 +644,13 @@ public class PlannerTelegramBot
      * =========================
      */
 
-    private void handleAssignTaskId(User user, Long chatId, Long telegramId, String text) {
+    private void handleAssignTaskId(Long chatId, Long telegramId, String text) {
         try {
             Long taskId = Long.parseLong(text);
 
             pendingAssignTaskIds.put(telegramId, taskId);
 
-            user.setState(UserState.WAITING_FOR_ASSIGN_CATEGORY_CHOICE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.WAITING_FOR_ASSIGN_CATEGORY_CHOICE);
 
             sendMessage(chatId, "Какую категорию назначить?", createCategoryChoiceMenu());
 
@@ -691,14 +659,13 @@ public class PlannerTelegramBot
         }
     }
 
-    private void handleAssignCategoryChoice(User user, Long chatId, Long telegramId, String text) {
+    private void handleAssignCategoryChoice(Long chatId, Long telegramId, String text) {
 
         Long taskId = pendingAssignTaskIds.get(telegramId);
 
         if (taskId == null) {
             sendMessage(chatId, "Начните назначение категории заново.");
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
             return;
         }
 
@@ -720,22 +687,19 @@ public class PlannerTelegramBot
                 }
                 sendMessage(chatId, message.toString());
 
-                user.setState(UserState.WAITING_FOR_ASSIGN_CATEGORY_ID);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.WAITING_FOR_ASSIGN_CATEGORY_ID);
             }
 
             case "➕ Создать новую" -> {
                 sendMessage(chatId, "Введите название новой категории:");
-                user.setState(UserState.WAITING_FOR_ASSIGN_NEW_CATEGORY_NAME);
-                userService.update(user);
+
+                userService.updateState(telegramId, UserState.WAITING_FOR_ASSIGN_NEW_CATEGORY_NAME);
             }
 
             case "🚫 Без категории" -> {
                 taskService.setCategory(taskId, null);
                 pendingAssignTaskIds.remove(telegramId);
-
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId,UserState.IDLE);
 
                 sendMessage(chatId, "✅ Категория у задачи убрана.", createTaskMenu());
             }
@@ -744,7 +708,7 @@ public class PlannerTelegramBot
         }
     }
 
-    private void handleAssignCategoryId(User user, Long chatId, Long telegramId, String text) {
+    private void handleAssignCategoryId(Long chatId, Long telegramId, String text) {
         try {
             Long categoryId = Long.parseLong(text);
 
@@ -754,16 +718,14 @@ public class PlannerTelegramBot
 
             if (taskId == null) {
                 sendMessage(chatId, "Начните назначение категории заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
             taskService.setCategory(taskId, category);
             pendingAssignTaskIds.remove(telegramId);
 
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             sendMessage(chatId, "✅ Категория «" + category.getName() + "» назначена задаче!", createTaskMenu());
 
@@ -774,17 +736,16 @@ public class PlannerTelegramBot
         }
     }
 
-    private void handleAssignNewCategoryName(User user, Long chatId, Long telegramId, String text) {
+    private void handleAssignNewCategoryName(Long chatId, Long telegramId, String text) {
 
         pendingCategoryNames.put(telegramId, text);
 
-        user.setState(UserState.WAITING_FOR_ASSIGN_NEW_CATEGORY_COLOR);
-        userService.update(user);
+        userService.updateState(telegramId, UserState.WAITING_FOR_ASSIGN_NEW_CATEGORY_COLOR);
 
         sendMessage(chatId, "Выберите цвет категории:", createColorMenu());
     }
 
-    private void handleAssignNewCategoryColor(User user, Long chatId, Long telegramId, String text) {
+    private void handleAssignNewCategoryColor(Long chatId, Long telegramId, String text) {
         try {
             CategoryCollors color = CategoryCollors.valueOf(text.toUpperCase());
 
@@ -793,8 +754,7 @@ public class PlannerTelegramBot
 
             if (name == null || taskId == null) {
                 sendMessage(chatId, "Начните назначение категории заново.");
-                user.setState(UserState.IDLE);
-                userService.update(user);
+                userService.updateState(telegramId, UserState.IDLE);
                 return;
             }
 
@@ -803,9 +763,7 @@ public class PlannerTelegramBot
             pendingAssignTaskIds.remove(telegramId);
 
             taskService.setCategory(taskId, category);
-
-            user.setState(UserState.IDLE);
-            userService.update(user);
+            userService.updateState(telegramId, UserState.IDLE);
 
             sendMessage(chatId, "✅ Категория «" + category.getName() + "» создана и назначена задаче!", createTaskMenu());
 

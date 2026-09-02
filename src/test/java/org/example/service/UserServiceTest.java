@@ -3,6 +3,7 @@ package org.example.service;
 import org.example.Repository.UserRepository;
 import org.example.entity.User;
 import org.example.exceptions.UserNotFoundException;
+import org.example.model.UserState;
 import org.example.service.dto.UserRegistrationResult;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,17 @@ class UserServiceTest {
     void updateTest() {
         userService.update(user);
         verify(userRepository,times(1)).update(user);
+    }
+
+    @Test
+    void updateStateTest() {
+        user.setState(UserState.IDLE);
+        when(userRepository.findByTelegramId(1L)).thenReturn(Optional.of(user));
+
+        userService.updateState(1L, UserState.WAITING_FOR_ASSIGN_NEW_CATEGORY_COLOR);
+
+        verify(userRepository, times(1)).update(user);
+
     }
 
     @Test

@@ -16,14 +16,16 @@ public class Main {
 
         Dotenv dotenv = Dotenv.load();
         String token = dotenv.get("BOT_TOKEN");
-
         BotConfig config = new BotConfig(token, "StudyPlannerBot");
+
         UserRepository userRepository = new UserRepository();
         UserService userService = new UserService(userRepository);
+
         TaskRepository taskRepository = new TaskRepository();
-        TaskService taskService = new TaskService(taskRepository);
         CategoryRepository categoryRepository = new CategoryRepository();
         CategoryService categoryService = new CategoryService(categoryRepository);
+
+        TaskService taskService = new TaskService(taskRepository, userService, categoryService);
         PlannerTelegramBot bot =
                 new PlannerTelegramBot(config, userService, taskService,categoryService);
         TelegramBotsLongPollingApplication app =

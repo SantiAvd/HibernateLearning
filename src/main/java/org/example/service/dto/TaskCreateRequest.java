@@ -10,9 +10,18 @@ public class TaskCreateRequest {
     private String description;
     private Instant deadline;
     private PriorityValues priority;
-    private Category category;
+    private Long categoryId;
+    private Long telegramId;
 
     public TaskCreateRequest() {}
+
+    public Long getTelegramId() {
+        return telegramId;
+    }
+
+    public void setTelegramId(Long telegramId) {
+        this.telegramId = telegramId;
+    }
 
     public String getTitle() {
         return title;
@@ -38,12 +47,12 @@ public class TaskCreateRequest {
         this.priority = priority;
     }
 
-    public Category getCategory() {
-        return category;
+    public Long getCategory() {
+        return categoryId;
     }
 
-    public void setCategory(Category category) {
-        this.category = category;
+    public void setCategory(Long category) {
+        this.categoryId = category;
     }
 
     public Instant getDeadline() {

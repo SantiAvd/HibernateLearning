@@ -3,6 +3,7 @@ package org.example.service;
 import org.example.Repository.UserRepository;
 import org.example.entity.User;
 import org.example.exceptions.UserNotFoundException;
+import org.example.model.UserState;
 import org.example.service.dto.UserRegistrationResult;
 
 import java.util.Objects;
@@ -59,6 +60,14 @@ public class UserService {
         }
 
          return new UserRegistrationResult(user, true);
+    }
+
+    public void updateState(Long telegramId, UserState newState) {
+        User user = userRepository.findByTelegramId(telegramId)
+                .orElseThrow(() -> new UserNotFoundException(telegramId));
+
+        user.setState(newState);
+        userRepository.update(user);
     }
 
     public void update(User user) {
