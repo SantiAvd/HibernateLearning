@@ -12,5 +12,7 @@
         <property name="hibernate.format_sql">true</property>
 
         <mapping class="org.example.entity.Task"/>
+        <mapping class="org.example.entity.User"/>
+        <mapping class="org.example.entity.Category"/>
     </session-factory>
 </hibernate-configuration>

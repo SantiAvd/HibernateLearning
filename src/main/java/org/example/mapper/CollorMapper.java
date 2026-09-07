@@ -1,4 +1,6 @@
-package org.example.model;
+package org.example.mapper;
+
+import org.example.model.CategoryCollors;
 
 public class CollorMapper {
 

@@ -70,11 +70,14 @@ public class TaskRepository {
         }
     }
 
-    public void delete(Task task) {
+    public void delete(Long id) {
         try (Session session = HibernateUtil.getSessionFactory().openSession()) {
             Transaction tx = null;
             try {
                 tx = session.beginTransaction();
+                Query<Task> query = session.createQuery("from Task where id = :id", Task.class);
+                query.setParameter("id", id);
+                Task task = query.uniqueResult();
                 task = session.merge(task);
                 session.remove(task);
                 tx.commit();

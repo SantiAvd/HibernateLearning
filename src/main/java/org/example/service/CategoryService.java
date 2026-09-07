@@ -2,6 +2,7 @@ package org.example.service;
 
 import org.example.Repository.CategoryRepository;
 import org.example.entity.Category;
+import org.example.exceptions.CategoryNotFoundException;
 import org.example.model.CategoryCollors;
 
 import java.util.List;
@@ -18,7 +19,7 @@ public class CategoryService {
     public  Category getById(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException("Категория не найдена"));
+                        new CategoryNotFoundException(id));
     }
 
     public List<Category> getAll() {

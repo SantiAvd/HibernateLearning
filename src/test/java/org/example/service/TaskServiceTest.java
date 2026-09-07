@@ -2,7 +2,8 @@ package org.example.service;
 
 
 import org.example.Repository.TaskRepository;
-import org.example.dto.TaskCreateRequest;
+import org.example.exceptions.TaskNotFoundException;
+import org.example.service.dto.TaskCreateRequest;
 import org.example.entity.Category;
 import org.example.entity.Task;
 import org.example.entity.User;
@@ -31,6 +32,13 @@ import static org.mockito.Mockito.*;
 public class TaskServiceTest {
     @Mock
     TaskRepository taskRepository;
+
+    @Mock
+    CategoryService categoryService;
+
+    @Mock
+    UserService userService;
+
     @InjectMocks
     TaskService taskService;
     User user;
@@ -45,14 +53,19 @@ public class TaskServiceTest {
     @Test
     void createTaskTest() {
         Category category = new Category("Home", CategoryCollors.ORANGE);
+
         TaskCreateRequest taskCreateRequest = new TaskCreateRequest();
         taskCreateRequest.setTitle("title");
         taskCreateRequest.setDescription("description");
-        taskCreateRequest.setCategory(category);
         taskCreateRequest.setPriority(PriorityValues.LOW);
         taskCreateRequest.setDeadline(Instant.parse("2026-08-23T10:15:30Z"));
+        taskCreateRequest.setTelegramId(1L);
+        taskCreateRequest.setCategory(5L);
 
-        taskService.create(taskCreateRequest, user);
+        when(userService.getUserByTelegramId(1L)).thenReturn(user);
+        when(categoryService.getById(5L)).thenReturn(category);
+
+        taskService.create(taskCreateRequest);
 
         verify(taskRepository, times(1)).save(any(Task.class));
     }
@@ -88,33 +101,46 @@ public class TaskServiceTest {
 
         verify(taskRepository,times(1)).update(task);
     }
+    @Test
+    void createTaskTest_withoutCategory() {
+        TaskCreateRequest taskCreateRequest = new TaskCreateRequest();
+        taskCreateRequest.setTitle("title");
+        taskCreateRequest.setDescription("description");
+        taskCreateRequest.setPriority(PriorityValues.LOW);
+        taskCreateRequest.setDeadline(Instant.parse("2026-08-23T10:15:30Z"));
+        taskCreateRequest.setTelegramId(1L);
+        taskCreateRequest.setCategory(null);
+
+        when(userService.getUserByTelegramId(1L)).thenReturn(user);
+
+        taskService.create(taskCreateRequest);
+
+        verify(categoryService, never()).getById(any());
+        verify(taskRepository, times(1)).save(any(Task.class));
+    }
 
     @Test
     void changeStatusTaskIfNotExistTest() {
         task.setStatus(TaskStatus.NOT_STARTED);
         when(taskRepository.findById(1L)).thenReturn(Optional.empty());
 
-        taskService.changeStatus(1L, TaskStatus.NOT_STARTED);
+        TaskNotFoundException exception = Assertions.assertThrowsExactly(TaskNotFoundException.class,
+                () -> taskService.changeStatus(1L, TaskStatus.NOT_STARTED));
 
-        verify(taskRepository,never()).update(any(Task.class));
-    }
-
-    @Test
-    void deleteTaskIfExistTest() {
-        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
-
-        taskService.delete(1L);
-
-        verify(taskRepository, times(1)).delete(task);
+        Assertions.assertEquals("Задача с ID 1 не найдена", exception.getMessage());
+        verify(taskRepository, never()).update(any(Task.class));
     }
 
     @Test
     void deleteTaskIfNotExistTest() {
-        when(taskRepository.findById(1L)).thenReturn(Optional.empty());
+        Long id = 1L;
+        when(taskRepository.findById(id)).thenReturn(Optional.empty());
 
-        taskService.delete(1L);
+        TaskNotFoundException taskNotFoundException = Assertions.assertThrowsExactly(TaskNotFoundException.class,
+                () -> taskService.delete(id));
 
-        verify(taskRepository, never()).delete(any(Task.class));
+        Assertions.assertEquals("Задача с ID "  + id +  " не найдена", taskNotFoundException.getMessage());
+        verify(taskRepository, never()).delete(id);
     }
 
     @Test

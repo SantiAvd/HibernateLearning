@@ -22,6 +22,12 @@ public class UserRepository {
         }
     }
 
+    public Optional<User> findById(Long id) {
+        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
+            User user = session.find(User.class, id);
+            return Optional.ofNullable(user);
+        }
+    }
     public void save(User user) {
         try(
                 Session session = HibernateUtil.getSessionFactory().openSession();
