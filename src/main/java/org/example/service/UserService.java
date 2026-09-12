@@ -5,6 +5,9 @@ import org.example.entity.User;
 import org.example.exceptions.UserNotFoundException;
 import org.example.model.UserState;
 import org.example.service.dto.UserRegistrationResult;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -12,8 +15,10 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final SessionFactory sessionFactory;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
         this.userRepository = userRepository;
     }
 
@@ -22,64 +27,95 @@ public class UserService {
             String username,
             String firstName
     ) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction tx = session.beginTransaction();
 
-        Optional<User> optionalUser = userRepository.findByTelegramId(telegramId);
-         if (optionalUser.isPresent()) {
-             User existingUser = optionalUser.get();
+            try {
+                Optional<User> optionalUser = userRepository.findByTelegramId(telegramId, session);
 
-             boolean changed = false;
-             if (!Objects.equals(existingUser.getUserName(), username)) {
-                 existingUser.setUserName(username);
-                 changed = true;
-             }
-             if (!Objects.equals(existingUser.getFirstName(), firstName)) {
-                 existingUser.setFirstName(firstName);
-                 changed = true;
-             }
+                if (optionalUser.isPresent()) {
+                    User existingUser = optionalUser.get();
+                    boolean changed = false;
+                    if (!Objects.equals(existingUser.getUserName(), username)) {
+                        existingUser.setUserName(username);
+                        changed = true;
+                    }
 
-             if (changed) {
-                 userRepository.update(existingUser);
-             }
+                    if (!Objects.equals(existingUser.getFirstName(), firstName)) {
+                        existingUser.setFirstName(firstName);
+                        changed = true;
+                    }
 
-             return new UserRegistrationResult(existingUser, false);
-         }
-        User user = new User(
-                telegramId,
-                username,
-                firstName
-        );
+                    if (changed) {
+                        userRepository.update(
+                                existingUser,
+                                session
+                        );
+                    }
 
-        try {
-            userRepository.save(user);
-        } catch (RuntimeException e) {
-            Optional<User> raceWinner = userRepository.findByTelegramId(telegramId);
-            if (raceWinner.isPresent()) {
-                return new UserRegistrationResult(raceWinner.get(), false);
+                    tx.commit();
+
+                    return new UserRegistrationResult(
+                            existingUser,
+                            false
+                    );
+                }
+
+                User user = new User(
+                        telegramId,
+                        username,
+                        firstName
+                );
+
+                try {
+                    userRepository.save(user, session);
+                    tx.commit();
+                    return new UserRegistrationResult(user, true);
+
+                } catch (RuntimeException e) {
+
+                    Optional<User> raceWinner = userRepository.findByTelegramId(telegramId, session);
+                    if (raceWinner.isPresent()) {
+                        tx.commit();
+
+                        return new UserRegistrationResult(raceWinner.get(), false);
+                    }
+
+                    throw e;
+                }
+
+            } catch (RuntimeException e) {
+                if (tx.isActive()) {
+                    tx.rollback();
+                }
+
+                throw e;
             }
-            throw e;
         }
-
-         return new UserRegistrationResult(user, true);
     }
 
     public void updateState(Long telegramId, UserState newState) {
-        User user = userRepository.findByTelegramId(telegramId)
-                .orElseThrow(() -> new UserNotFoundException(telegramId));
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                User user = userRepository.findByTelegramId(telegramId, session)
+                        .orElseThrow(() -> new UserNotFoundException(telegramId));
 
-        user.setState(newState);
-        userRepository.update(user);
-    }
-
-    public void update(User user) {
-        userRepository.findById(user.getId())
-                .orElseThrow(() -> new UserNotFoundException(user.getId()));
-
-        userRepository.update(user);
+                user.setState(newState);
+                userRepository.update(user, session);
+                transaction.commit();
+            } catch (Exception e) {
+                transaction.rollback();
+                throw e;
+            }
+        }
     }
 
     public User getUserByTelegramId(Long telegramId) {
-        return userRepository.findByTelegramId(telegramId)
-                .orElseThrow(() ->
-                        new RuntimeException("Пользователь не найден"));
+        try (Session session = sessionFactory.openSession()) {
+            return userRepository.
+                    findByTelegramId(telegramId, session).orElseThrow(() ->
+                        new UserNotFoundException(telegramId));
+        }
     }
 }

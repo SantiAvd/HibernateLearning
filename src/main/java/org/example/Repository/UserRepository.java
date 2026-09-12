@@ -10,60 +10,18 @@ import java.util.Optional;
 
 public class UserRepository {
 
-    public Optional<User> findByTelegramId(Long telegramId){
-        try (
-                Session session = HibernateUtil.getSessionFactory().openSession();
-        ) {
+    public Optional<User> findByTelegramId(Long telegramId, Session session){
            Query<User> query = session.createQuery("FROM User WHERE telegramId = :telegramId", User.class);
            query.setParameter("telegramId", telegramId);
-            return  query.uniqueResultOptional();
-        } catch (Exception e){
-            throw new RuntimeException("Ошибка при поиске студента по telegramId=" + telegramId, e);
-        }
+           return  query.uniqueResultOptional();
     }
 
-    public Optional<User> findById(Long id) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            User user = session.find(User.class, id);
-            return Optional.ofNullable(user);
-        }
-    }
-    public void save(User user) {
-        try(
-                Session session = HibernateUtil.getSessionFactory().openSession();
-        ) {
-            Transaction tx = null;
-            try {
-                tx = session.beginTransaction();;
-                session.persist(user);
-                tx.commit();
-            } catch(Exception e)  {
-                if (tx != null) {
-                    tx.rollback();
-                }
-                throw e;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при сохранении", e);
-        }
+    public void save(User user, Session session) {
+        session.persist(user);
     }
 
-    public void update(User user) {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = null;
-            try {
-                tx = session.beginTransaction();
-                session.merge(user);
-                tx.commit();
-            } catch(Exception e)  {
-                if (tx != null) {
-                    tx.rollback();
-                }
-                throw e;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при сохранении изменений пользователя", e);
-        }
+    public void update(User user, Session session) {
+        session.merge(user);
     }
 
 }

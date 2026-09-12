@@ -4,6 +4,9 @@ import org.example.Repository.CategoryRepository;
 import org.example.entity.Category;
 import org.example.exceptions.CategoryNotFoundException;
 import org.example.model.CategoryCollors;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,31 +14,56 @@ import java.util.Optional;
 public class CategoryService {
 
     CategoryRepository categoryRepository;
+    SessionFactory sessionFactory;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
         this.categoryRepository = categoryRepository;
     }
 
     public  Category getById(Long id) {
-        return categoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new CategoryNotFoundException(id));
+        try(Session session = sessionFactory.openSession()) {
+            return categoryRepository.findById(id, session)
+                    .orElseThrow(() ->
+                            new CategoryNotFoundException(id));
+        }
     }
 
     public List<Category> getAll() {
-        return categoryRepository.findAll();
+        try (Session session = sessionFactory.openSession()) {
+            return categoryRepository.findAll(session);
+        }
     }
 
     public Category create(String name, CategoryCollors color) {
-        Category category = new Category(name, color);
-        categoryRepository.save(category);
-        return  category;
+
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                Category category = new Category(name, color);
+                categoryRepository.save(category, session);
+                transaction.commit();
+                return  category;
+            } catch (Exception e) {
+                transaction.rollback();
+                throw e;
+            }
+        }
     }
 
     public void delete(Long id) {
-        Optional<Category> category = categoryRepository.findById(id);
-        if (category.isPresent()) {
-            categoryRepository.delete(category.get());
+        try(Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            try {
+                Category category = categoryRepository.findById(id, session).orElseThrow(
+                        () -> new CategoryNotFoundException(id)
+                );
+                categoryRepository.delete(category, session);
+                transaction.commit();
+            } catch (Exception e) {
+                transaction.rollback();
+                throw e;
+            }
         }
     }
 }
