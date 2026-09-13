@@ -11,66 +11,24 @@ import java.util.Optional;
 
 public class CategoryRepository {
 
-    public Optional<Category> findById(Long id) {
-        try (Session session =
-                     HibernateUtil.getSessionFactory().openSession()) {
-
-            Category category = session.find(Category.class, id);
-
-            return Optional.ofNullable(category);
-
-        } catch (Exception e) {
-            throw new RuntimeException( "Ошибка при поиске категории id=" + id, e);
-        }
+    public Optional<Category> findById(Long id, Session session) {
+        Category category = session.find(Category.class, id);
+        return Optional.ofNullable(category);
     }
 
-    public void save(Category category) {
-        try (Session session =
-                     HibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = null;
-            try {
-                tx = session.beginTransaction();
+    public void save(Category category, Session session) {
                 session.persist(category);
-                tx.commit();
-            } catch (Exception e) {
-                if (tx != null) {
-                    tx.rollback();
-                }
-                throw e;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при сохранении категории", e);
-        }
     }
 
-    public List<Category> findAll() {
-        try (Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Query<Category> query = session.createQuery(
-                    "FROM Category",
-                    Category.class
-            );
-            return query.getResultList();
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при получении списка категорий",e);
-        }
+    public List<Category> findAll(Session session) {
+        Query<Category> query = session.createQuery(
+                "FROM Category",
+                Category.class
+        );
+        return query.getResultList();
     }
 
-    public void delete(Category category) {
-
-        try(Session session = HibernateUtil.getSessionFactory().openSession()) {
-            Transaction tx = null;
-            try {
-                tx = session.beginTransaction();
-                session.remove(category);
-                tx.commit();
-            }catch (Exception e) {
-                if (tx != null) {
-                    tx.rollback();
-                }
-                throw e;
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при удалении", e);
-        }
+    public void delete(Category category, Session session) {
+        session.remove(category);
     }
 }
